@@ -35,6 +35,9 @@ async def get_cards(context, request):
     util = get_utility(IStripePayUtility)
 
     cards = await util.get_payment_methods(customer=bhr.customer, type="card")
+    customer = await util.get_customer(bhr.customer)
+    cards['customer'] = customer
+
     return cards
 
 
@@ -61,6 +64,7 @@ async def get_cards(context, request):
                         "cp": {"type": "string"},
                         "country": {"type": "string"},
                         "phone": {"type": "string"},
+                        "tax": {"type": "string"}
                     }
                 }
             }
@@ -79,6 +83,10 @@ async def register_paymentmethod(context, request):
     util: StripePayUtility = get_utility(IStripePayUtility)
     customer = await util.set_customer(billing_email)
     customerid = customer.get("id", None)
+
+    taxid = payload.get('tax')
+    if taxid is not None:
+        await util.set_tax(customerid, taxid)
     bhr.customer = customerid
 
     billing_details = BillingDetails(
@@ -133,6 +141,7 @@ async def register_paymentmethod(context, request):
                         "shipping_city": {"type": "string"},
                         "shipping_state": {"type": "string"},
                         "shipping_country": {"type": "string"},
+                        "customer": {"type": "string"}
                     }
                 }
             }
@@ -143,10 +152,11 @@ async def pay_bought(context, request):
     payload = await request.json()
     bhr = IProduct(context)
 
-    if bhr.customer is None:
+    customer = payload.get('customer', bhr.customer)
+    if customer is None:
         raise HTTPPreconditionFailed(content={"reason": "No customer"})
 
-    if payload.get("shipping_line1", None) is None:
+    if payload.get("shipping_line1", None) in (None, ""):
         shipping = None
     else:
         shipping = {
@@ -192,7 +202,7 @@ async def pay_bought(context, request):
         path=path,
         db=db.id,
         currency='eur',
-        customer=bhr.customer,
+        customer=customer,
         payment_method=pmid,
         amount=total,
         shipping=shipping

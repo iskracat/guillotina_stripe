@@ -37,6 +37,8 @@ async def get_cards(context, request):
     util = get_utility(IStripePayUtility)
 
     cards = await util.get_payment_methods(customer=bhr.customer, type="card")
+    customer = await util.get_customer(bhr.customer)
+    cards['customer'] = customer
     return cards
 
 
@@ -63,6 +65,7 @@ async def get_cards(context, request):
                         "cp": {"type": "string"},
                         "country": {"type": "string"},
                         "phone": {"type": "string"},
+                        "tax": {"type": "string"}
                     }
                 }
             }
@@ -80,7 +83,11 @@ async def register_paymentmethod(context, request):
     bhr.billing_email = billing_email
     util: StripePayUtility = get_utility(IStripePayUtility)
     customer = await util.set_customer(billing_email)
+    taxid = payload.get("tax")
+    
     customerid = customer.get("id", None)
+    if taxid is not None:
+        await util.set_tax(customerid, taxid)
     bhr.customer = customerid
 
     billing_details = BillingDetails(
@@ -147,7 +154,7 @@ async def unsubscribe(context, request):
     if bhr.subscription is not None and bhr.customer is not None:
         await util.cancel_subscription(bhr.customer, bhr.subscription)
     subscriptions = await util.get_subscriptions(customer=bhr.customer)
-    for subscription in subscriptions["data"]:
+    for subscription in subscriptions:
         await util.cancel_subscription(subscription["customer"], subscription["id"])
     bhr.subscription = None
     bhr.customer = None

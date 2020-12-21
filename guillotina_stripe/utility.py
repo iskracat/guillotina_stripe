@@ -84,11 +84,25 @@ class StripePayUtility(object):
         await self.session.close()
 
     # CUSTOMER
+    async def get_customer(self, customer: str):
+        url = f"/v1/customers/{customer}"
+        async with self.session.get(self.api + url) as resp:
+            body = await resp.json()
+
+        return body
+
     async def set_customer(self, email: str, id_=None):
         url = "/v1/customers"
         if id_ is not None:
             url += f"/{id_}"
         async with self.session.post(self.api + url, data={"email": email}) as resp:
+            body = await resp.json()
+
+        return body
+
+    async def set_tax(self, customer: str, tax: str):
+        url = f"/v1/customers/{customer}/tax_ids/"
+        async with self.session.post(self.api + url, data={"type": 'eu_vat', "value": tax}) as resp:
             body = await resp.json()
 
         return body
