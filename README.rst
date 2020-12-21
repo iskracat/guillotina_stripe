@@ -1,5 +1,5 @@
 GUILLOTINA_STRIPE
-================
+=================
 
 STRIPE backend for guillotina.
 
