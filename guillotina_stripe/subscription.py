@@ -38,7 +38,7 @@ async def get_cards(context, request):
 
     cards = await util.get_payment_methods(customer=bhr.customer, type="card")
     customer = await util.get_customer(bhr.customer)
-    cards['customer'] = customer
+    cards["customer"] = customer
     return cards
 
 
@@ -65,7 +65,7 @@ async def get_cards(context, request):
                         "cp": {"type": "string"},
                         "country": {"type": "string"},
                         "phone": {"type": "string"},
-                        "tax": {"type": "string"}
+                        "tax": {"type": "string"},
                     }
                 }
             }
@@ -84,7 +84,7 @@ async def register_paymentmethod(context, request):
     util: StripePayUtility = get_utility(IStripePayUtility)
     customer = await util.set_customer(billing_email)
     taxid = payload.get("tax")
-    
+
     customerid = customer.get("id", None)
     if taxid is not None:
         await util.set_tax(customerid, taxid)
@@ -194,9 +194,16 @@ async def subscribe(context, request):
 
     obj_type = context.type_name
     prices = app_settings["stripe"].get("subscriptions", {}).get(obj_type, [])
-
+    trial = None
     if price is None and len(prices) > 0:
-        price = prices[0]
+        price = prices[0]["price"]
+        trial = prices[0]["trial"]
+    elif price is not None:
+        for orig_price in prices:
+            if price == orig_price['price']:
+                trial = orig_price.get('trial', 0)
+        if trial is None:
+            raise HTTPPreconditionFailed(content={"reason": "No price and no trial"})
     else:
         raise HTTPPreconditionFailed(content={"reason": "No price"})
 
@@ -204,7 +211,12 @@ async def subscribe(context, request):
     db = task_vars.db.get()
 
     subscription = await util.create_subscription(
-        customer=bhr.customer, price=price, payment_method=pmid, path=path, db=db.id
+        customer=bhr.customer,
+        price=price,
+        payment_method=pmid,
+        path=path,
+        db=db.id,
+        trial=trial,
     )
 
     if subscription.get("id") is not None:

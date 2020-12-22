@@ -21,7 +21,7 @@ def base_settings_configurator(settings):
     }
     settings['stripe'] = {
         "subscriptions": {
-            "CustomSubscriptionType": ["price_1HNb9XGeGvgK89lRkF3KPEgs"]
+            "CustomSubscriptionType": [{"trial": 0, "price": "price_1HNb9XGeGvgK89lRkF3KPEgs"}]
         },
         "products": {
             "CustomProductType": ["price_1I0UIuGeGvgK89lReW6fQzYM", "price_1I0UJWGeGvgK89lRf4C1Qt7z"]
