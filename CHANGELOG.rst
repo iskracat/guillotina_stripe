@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a4 (unreleased)
+1.0.0a4 (2020-12-22)
 --------------------
 
 - Fixing subscription bug
