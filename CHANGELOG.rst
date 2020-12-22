@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a3 (unreleased)
+1.0.0a3 (2020-12-22)
 --------------------
 
 - Support trail subscription
