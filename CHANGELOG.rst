@@ -4,7 +4,7 @@ CHANGELOG
 1.0.0a5 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fixing trial big
 
 
 1.0.0a4 (2020-12-22)

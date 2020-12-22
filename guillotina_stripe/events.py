@@ -1,6 +1,6 @@
 from zope.interface import implementer
 from guillotina.events import ObjectEvent
-from guillotina_stripe.interfaces import IObjectFailedEvent
+from guillotina_stripe.interfaces import IObjectFailedEvent, IObjectTrailingEvent
 from guillotina_stripe.interfaces import IObjectPaidEvent
 from guillotina_stripe.interfaces import IInvoicePaidEvent
 from guillotina_stripe.interfaces import IInvoicePaymentFailed
@@ -14,6 +14,13 @@ from guillotina_stripe.interfaces import ICustomerSubscriptionTrialWillEnd
 
 @implementer(IObjectPaidEvent)
 class ObjectPaidEvent(ObjectEvent):
+    def __init__(self, object, data=None):
+        self.object = object
+        self.data = data or {}
+
+
+@implementer(IObjectTrailingEvent)
+class ObjectTrailingEvent(ObjectEvent):
     def __init__(self, object, data=None):
         self.object = object
         self.data = data or {}

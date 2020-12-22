@@ -229,10 +229,9 @@ class StripePayUtility(object):
             "expand[]": "latest_invoice",
             "expand[]": "latest_invoice.payment_intent",
         }
-
         if trial > 0:
             trial_end = time.time() + trial
-            subsdata["trial_end"] = trial_end
+            subsdata["trial_end"] = round(trial_end)
 
         async with self.session.post(
             self.api + url,

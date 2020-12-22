@@ -1,5 +1,5 @@
 # this is for testing.py, do not import into other modules
-from guillotina_stripe.interfaces import IObjectFailedEvent, IObjectPaidEvent
+from guillotina_stripe.interfaces import IObjectFailedEvent, IObjectPaidEvent, IObjectTrailingEvent
 from guillotina import configure
 from guillotina.content import Item
 from guillotina.content import Folder
@@ -48,6 +48,13 @@ class CustomSubscriptionType(Folder):
     for_=(ICustomSubscriptionType, IObjectPaidEvent)
 )
 def subscribed(obj, event):
+    obj.subscribed = True
+    obj.register()
+
+@configure.subscriber(
+    for_=(ICustomSubscriptionType, IObjectTrailingEvent)
+)
+def subscribed_trailing(obj, event):
     obj.subscribed = True
     obj.register()
 

@@ -16,6 +16,9 @@ class IObjectPaidEvent(interfaces.IObjectEvent):
 class IObjectFailedEvent(interfaces.IObjectEvent):
     """Object failed event"""
 
+class IObjectTrailingEvent(interfaces.IObjectEvent):
+    """Object trailing event"""
+
 class IInvoicePaidEvent(Interface):
     pass
 
@@ -112,3 +115,11 @@ class ISubscription(Interface):
     write_permission(price_id="guillotina.Nobody")
     read_permission(price_id="guillotina.Owner")
     paid = schema.Bool(title="Paid", required=False, default=False)
+
+    write_permission(trailing="guillotina.Nobody")
+    read_permission(trailing="guillotina.Owner")
+    trailing = schema.Bool(title="Trailing", required=False, default=False)
+
+    write_permission(trial_end="guillotina.Nobody")
+    read_permission(trial_end="guillotina.Owner")
+    trial_end = schema.Int(title="Trial end", required=False, default=False)

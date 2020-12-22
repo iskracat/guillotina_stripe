@@ -1,9 +1,9 @@
-from guillotina_stripe.events import ObjectPaidEvent
+from guillotina_stripe.events import ObjectPaidEvent, ObjectTrailingEvent
 from guillotina_stripe.events import ObjectFailedEvent
 from guillotina_stripe.utility import StripePayUtility
 from guillotina_stripe.models import BillingDetails, Card
 from guillotina_stripe.interfaces import (
-    IInvoicePaidEvent,
+    ICustomerSubscriptionDeleted, ICustomerSubscriptionTrialWillEnd, IInvoicePaidEvent,
     IInvoicePaymentFailed,
     IMarkerSubscription,
     ISubscription,
@@ -220,15 +220,21 @@ async def subscribe(context, request):
     )
 
     if subscription.get("id") is not None:
+        if subscription.get("status") == "trailing":
+            bhr.trailing = True
+            bhr.paid = False
+            bhr.trial_end = subscription.get("trial_end")
+            await notify(ObjectTrailingEvent(context, subscription))
+
         payment_intent = subscription.get("latest_invoice", {}).get(
             "payment_intent", {}
         )
-        status = payment_intent.get("status", "failed")
-
-        bhr.paid = False
-        if status == "succeeded":
-            bhr.paid = True
-            await notify(ObjectPaidEvent(context, subscription))
+        if payment_intent is not None:
+            status = payment_intent.get("status", "failed")
+            bhr.paid = False
+            if status == "succeeded":
+                bhr.paid = True
+                await notify(ObjectPaidEvent(context, subscription))
 
         bhr.subscription = subscription.get("id")
         bhr.current_period_end = subscription.get("current_period_end")
@@ -298,3 +304,62 @@ async def webhook_failed(event):
                 bhr.paid = False
                 obj.register()
                 await notify(ObjectFailedEvent(obj, event.data))
+
+
+@configure.subscriber(for_=ICustomerSubscriptionTrialWillEnd)
+async def webhook_trailend(event):
+    elements = []
+    for line in event.data["lines"]["data"]:
+        if line["type"] == "subscription":
+            elements.append(line)
+
+    if len(elements) == 0:
+        return
+
+    for element in elements:
+        metadata = element.get("metadata", {})
+        path = metadata.get("path", None)
+        db_id = metadata.get("db", None)
+
+        try:
+            db = await get_database(db_id)
+        except DatabaseNotFound:
+            db = None
+
+        if db is not None:
+            async with transaction(db=db):
+                obj = await navigate_to(db, path)
+                bhr = ISubscription(obj)
+                bhr.paid = False
+                obj.register()
+                await notify(ObjectFailedEvent(obj, event.data))
+
+
+@configure.subscriber(for_=ICustomerSubscriptionDeleted)
+async def webhook_deleted(event):
+    elements = []
+    for line in event.data["lines"]["data"]:
+        if line["type"] == "subscription":
+            elements.append(line)
+
+    if len(elements) == 0:
+        return
+
+    for element in elements:
+        metadata = element.get("metadata", {})
+        path = metadata.get("path", None)
+        db_id = metadata.get("db", None)
+
+        try:
+            db = await get_database(db_id)
+        except DatabaseNotFound:
+            db = None
+
+        if db is not None:
+            async with transaction(db=db):
+                obj = await navigate_to(db, path)
+                bhr = ISubscription(obj)
+                bhr.paid = False
+                obj.register()
+                await notify(ObjectFailedEvent(obj, event.data))
+
