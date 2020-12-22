@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a5 (unreleased)
+1.0.0a5 (2020-12-22)
 --------------------
 
 - Fixing trial big
