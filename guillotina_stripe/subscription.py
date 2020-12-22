@@ -308,16 +308,8 @@ async def webhook_failed(event):
 
 @configure.subscriber(for_=ICustomerSubscriptionTrialWillEnd)
 async def webhook_trailend(event):
-    elements = []
-    for line in event.data["lines"]["data"]:
-        if line["type"] == "subscription":
-            elements.append(line)
-
-    if len(elements) == 0:
-        return
-
-    for element in elements:
-        metadata = element.get("metadata", {})
+    if event.data["object"] == "subscription":
+        metadata = event.data.get("metadata", {})
         path = metadata.get("path", None)
         db_id = metadata.get("db", None)
 
@@ -337,16 +329,9 @@ async def webhook_trailend(event):
 
 @configure.subscriber(for_=ICustomerSubscriptionDeleted)
 async def webhook_deleted(event):
-    elements = []
-    for line in event.data["lines"]["data"]:
-        if line["type"] == "subscription":
-            elements.append(line)
 
-    if len(elements) == 0:
-        return
-
-    for element in elements:
-        metadata = element.get("metadata", {})
+    if event.data["object"] == "subscription":
+        metadata = event.data.get("metadata", {})
         path = metadata.get("path", None)
         db_id = metadata.get("db", None)
 
@@ -360,6 +345,7 @@ async def webhook_deleted(event):
                 obj = await navigate_to(db, path)
                 bhr = ISubscription(obj)
                 bhr.paid = False
+                bhr.trailing = False
                 obj.register()
                 await notify(ObjectFailedEvent(obj, event.data))
 
