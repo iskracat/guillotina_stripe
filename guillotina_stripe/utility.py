@@ -231,7 +231,7 @@ class StripePayUtility(object):
         }
 
         if trial > 0:
-            trial_end = time() + trial
+            trial_end = time.time() + trial
             subsdata["trial_end"] = trial_end
 
         async with self.session.post(
