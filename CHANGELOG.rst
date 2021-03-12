@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a7 (unreleased)
+1.0.0a7 (2021-03-12)
 --------------------
 
 - Adding registry to keep price - id x content type
