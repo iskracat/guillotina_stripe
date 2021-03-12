@@ -1,6 +1,6 @@
 from guillotina.response import HTTPPreconditionFailed
 from guillotina import configure
-from guillotina_stripe.interfaces import IProduct, IMarkerProduct
+from guillotina_stripe.interfaces import IProduct, IMarkerProduct, IStripeConfiguration
 from guillotina_stripe.interfaces import IPaymentIntentFailed
 from guillotina_stripe.interfaces import IPaymentIntentSucceded
 from guillotina_stripe.interfaces import IStripePayUtility
@@ -14,6 +14,7 @@ from guillotina.browser import get_physical_path
 from guillotina import task_vars
 from guillotina.event import notify
 from guillotina.utils import get_database
+from guillotina.utils import get_registry
 from guillotina.transactions import transaction
 from guillotina.utils.content import navigate_to
 from guillotina.exceptions import DatabaseNotFound
@@ -119,6 +120,32 @@ async def register_paymentmethod(context, request):
     return result
 
 
+@configure.service(
+    method="GET",
+    name="@prices",
+    permission="guillotina.ModifyContent",
+    context=IMarkerProduct,
+    summary="View Prices",
+)
+async def view_prices(context, request):
+    registry = await get_registry()
+    settings = registry.for_interface(IStripeConfiguration)
+    util = get_utility(IStripePayUtility)
+    product_prices = settings['product_prices']
+    if context.type_name in product_prices:
+        price_info = product_prices[context.type_name]
+        return {
+            'prices': [
+                {
+                    'id': pi.get('id'),
+                    'price': await util.get_price(pi.get('price'))
+                } for pi in price_info
+            ]
+        }
+    return {
+        'prices': []
+    }
+
 
 @configure.service(
     method="POST",
@@ -177,7 +204,7 @@ async def pay_bought(context, request):
 
     price = payload.get('price')
     obj_type = context.type_name
-    prices = app_settings["stripe"].get("subscriptions", {}).get(obj_type, [])
+    prices = app_settings["stripe"].get("products", {}).get(obj_type, [])
 
     if price is None and len(prices) == 1:
         price = prices[0]
@@ -194,6 +221,13 @@ async def pay_bought(context, request):
 
     util = get_utility(IStripePayUtility)
     price_obj = await util.get_price(price)
+
+    if 'unit_amount' not in price_obj:
+        return {
+            'error': {
+                'message': 'No price configured'
+            }
+        }
 
     total = price_obj['unit_amount'] * quantity
 

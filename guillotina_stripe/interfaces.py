@@ -5,43 +5,71 @@ from guillotina.directives import read_permission
 from guillotina.directives import write_permission
 from guillotina.directives import index_field
 from zope.interface import interfaces
+import json
+
+PRICES = json.dumps(
+    {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"price": {"type": "string"}, "id": {"type": "string"}},
+            },
+        },
+    }
+)
+
 
 class IStripePayUtility(IAsyncUtility):
     pass
+
 
 # EVENTS
 class IObjectPaidEvent(interfaces.IObjectEvent):
     """Object paid event"""
 
+
 class IObjectFailedEvent(interfaces.IObjectEvent):
     """Object failed event"""
+
 
 class IObjectTrailingEvent(interfaces.IObjectEvent):
     """Object trailing event"""
 
+
 class IInvoicePaidEvent(Interface):
     pass
+
 
 class IInvoicePaymentFailed(Interface):
     pass
 
+
 class IInvoiceFinalized(Interface):
     pass
+
 
 class IPaymentIntentSucceded(Interface):
     pass
 
+
 class IPaymentIntentFailed(Interface):
     pass
+
 
 class ICustomerSubscriptionUpdated(Interface):
     pass
 
+
 class ICustomerSubscriptionDeleted(Interface):
     pass
 
+
 class ICustomerSubscriptionTrialWillEnd(Interface):
     pass
+
 
 class IMarkerProduct(Interface):
     """Marker interface for content with product information."""
@@ -110,7 +138,11 @@ class ISubscription(Interface):
     write_permission(price_id="guillotina.Nobody")
     read_permission(price_id="guillotina.Owner")
     index_field("creators", type="keyword")
-    price_ids = schema.List(title="Stripe subscription", required=False, value_type=schema.TextLine(title="price", required=False))
+    price_ids = schema.List(
+        title="Stripe subscription",
+        required=False,
+        value_type=schema.TextLine(title="price", required=False),
+    )
 
     write_permission(price_id="guillotina.Nobody")
     read_permission(price_id="guillotina.Owner")
@@ -123,3 +155,14 @@ class ISubscription(Interface):
     write_permission(trial_end="guillotina.Nobody")
     read_permission(trial_end="guillotina.Owner")
     trial_end = schema.Int(title="Trial end", required=False, default=False)
+
+
+class IStripeConfiguration(Interface):
+
+    product_prices = schema.JSONField(
+        title="Product prices definition", required=False, schema=PRICES
+    )
+
+    subscription_prices = schema.JSONField(
+        title="Subscription prices definition", required=False, schema=PRICES
+    )

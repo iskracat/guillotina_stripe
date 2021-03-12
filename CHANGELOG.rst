@@ -4,7 +4,8 @@ CHANGELOG
 1.0.0a7 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Adding registry to keep price - id x content type
+  [bloodbare]
 
 
 1.0.0a6 (2020-12-23)

@@ -1,5 +1,6 @@
 import pytest
 import json
+import asyncio
 
 
 PAYLOAD = {
@@ -180,6 +181,34 @@ async def test_pay_product_us(container_requester):
     async with container_requester as requester:
         resp, status_code = await requester(
             "POST",
+            "/db/guillotina/@addons",
+            data=json.dumps({
+                "id": "stripe"
+            })
+        )
+        assert status_code == 200
+
+
+        resp, status_code = await requester(
+            "PATCH",
+            "/db/guillotina/@registry/guillotina_stripe.interfaces.IStripeConfiguration.product_prices",
+            data=json.dumps({
+                "value": {
+                    "CustomProductType": [{
+                        "price": "price_1I0UIuGeGvgK89lReW6fQzYM",
+                        "id": "value1"
+                    }, {
+                        "price": "price_1I0UJWGeGvgK89lRf4C1Qt7z",
+                        "id": "value2"
+                    }]
+                }
+            })
+        )
+        assert status_code == 204
+
+
+        resp, status_code = await requester(
+            "POST",
             "/db/guillotina/",
             data=json.dumps({
                 "@type": "CustomProductType",
@@ -225,6 +254,13 @@ async def test_pay_product_us(container_requester):
         assert status_code == 200
         assert len(resp['data']) == 1
 
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/product/@prices"
+        )
+        assert len(resp['prices']) == 2
+
         resp, status_code = await requester(
             "POST",
             "/db/guillotina/product/@pay",
@@ -235,13 +271,12 @@ async def test_pay_product_us(container_requester):
             })
         )
         assert resp['status'] == 'succeeded'
-
+        await asyncio.sleep(1)
         resp, status_code = await requester(
             "GET",
             "/db/guillotina/product"
         )
-
-        assert resp['paid'] is True
+        assert resp['ispaid'] is True
 
 
 @pytest.mark.asyncio

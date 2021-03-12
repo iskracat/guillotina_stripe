@@ -23,6 +23,7 @@ app_settings = {
 def includeme(root, settings):
     configure.scan("guillotina_stripe.utility")
     configure.scan("guillotina_stripe.behavior")
+    configure.scan("guillotina_stripe.install")
     configure.scan("guillotina_stripe.events")
     configure.scan("guillotina_stripe.subscription")
     configure.scan("guillotina_stripe.product")
