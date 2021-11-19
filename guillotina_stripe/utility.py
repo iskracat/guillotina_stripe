@@ -212,7 +212,7 @@ class StripePayUtility(object):
     ):
         url = "/v1/payment_intents"
 
-        if coupon:
+        if coupon is not None:
             amount = await self.get_total_amount_applying_coupon(coupon, amount)
 
         data = {
@@ -251,7 +251,7 @@ class StripePayUtility(object):
             "expand[]": "latest_invoice",
             "expand[]": "latest_invoice.payment_intent",
         }
-        if coupon:
+        if coupon is not None:
             subsdata["coupon"] = coupon
         if trial > 0:
             trial_end = time.time() + trial
