@@ -70,7 +70,6 @@ class StripePayUtility(object):
         self.api = settings.get("api", BASE_URL)
         self.secret = settings.get("secret", None)
         self.auth = aiohttp.BasicAuth(self.secret)
-
         self.signing_secret = settings.get("signing", None)
         self.testing = settings.get("testing", False)
 
@@ -188,10 +187,32 @@ class StripePayUtility(object):
 
         return body
 
+    async def get_total_amount_applying_coupon(self, coupon: str, amount: int):
+        # https://support.stripe.com/questions/support-for-coupons-using-payment-intents-api
+        # Payment intent does not support coupons
+        # https://stripe.com/docs/api/coupons/retrieve
+        url_coupon = f"v1/coupons/{coupon}"
+        try:
+            valid_amount = amount
+            async with self.session.get(f"{BASE_URL}/{url_coupon}") as resp:
+                body = await resp.json()
+                if body.get("amount_off"):
+                    amount -= body.get("amount_off") / 100
+                elif body.get("percent_off"):
+                    amount -= (amount * (body["percent_off"] / 100))
+                if amount < 0:
+                    raise
+        except Exception:
+            amount = valid_amount
+        return amount
+
     async def create_paymentintent(
-        self, payment_method, currency, amount, description, customer, shipping, path, db
+            self, payment_method, currency, amount, description, customer, shipping, path, db, coupon: str
     ):
         url = "/v1/payment_intents"
+
+        if coupon:
+            amount = await self.get_total_amount_applying_coupon(coupon, amount)
 
         data = {
             "amount": amount,
@@ -211,7 +232,7 @@ class StripePayUtility(object):
 
         return body
 
-    async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int):
+    async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: str):
         # Check subscription
         subs = await self.get_subscriptions(customer)
 
@@ -229,6 +250,8 @@ class StripePayUtility(object):
             "expand[]": "latest_invoice",
             "expand[]": "latest_invoice.payment_intent",
         }
+        if coupon:
+            subsdata["coupon"] = coupon
         if trial > 0:
             trial_end = time.time() + trial
             subsdata["trial_end"] = round(trial_end)
@@ -279,4 +302,3 @@ class StripePayUtility(object):
             # return body
         else:
             return None
-

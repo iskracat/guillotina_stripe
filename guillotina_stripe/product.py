@@ -199,6 +199,7 @@ async def pay_bought(context, request):
         }
 
     pmid = payload.get('pmid')
+    coupon = payload.get("coupon")
     if pmid is None:
         raise HTTPPreconditionFailed(content={"reason": "No pmid"})
 
@@ -208,7 +209,7 @@ async def pay_bought(context, request):
 
     if price is None and len(prices) == 1:
         price = prices[0]
-    
+
     if price is None:
         raise HTTPPreconditionFailed(content={"reason": "No price"})
 
@@ -239,7 +240,8 @@ async def pay_bought(context, request):
         customer=customer,
         payment_method=pmid,
         amount=total,
-        shipping=shipping
+        shipping=shipping,
+        coupon=coupon
     )
 
     if charge.get("id") is not None:

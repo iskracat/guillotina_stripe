@@ -2,6 +2,9 @@ import pytest
 import json
 import asyncio
 
+from guillotina.component import get_utility
+from guillotina_stripe.interfaces import IStripePayUtility
+
 
 PAYLOAD = {
     "id": "evt_1I0WtnGeGvgK89lRmPnLKO1J",
@@ -357,3 +360,20 @@ async def test_pay_product_eu(container_requester):
         )
 
         assert resp['ispaid'] is True
+
+
+@pytest.mark.asyncio
+async def test_coupon_utility(container_requester):
+    async with container_requester:
+        utility = get_utility(IStripePayUtility)
+        # Applying 25% coupon
+        amount = await utility.get_total_amount_applying_coupon(coupon="foo-coupon-25", amount=10)
+        assert amount == 7.5
+
+        # Coupon does not exists
+        amount = await utility.get_total_amount_applying_coupon(coupon="invalid-coupon-404", amount=10)
+        assert amount == 10
+
+        # Coupon of 2 euros
+        amount = await utility.get_total_amount_applying_coupon(coupon="coupon-2-euros", amount=10)
+        assert amount == 8

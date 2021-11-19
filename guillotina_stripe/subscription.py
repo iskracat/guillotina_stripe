@@ -191,6 +191,7 @@ async def subscribe(context, request):
     util = get_utility(IStripePayUtility)
     pmid = payload.get("pmid")
     price = payload.get("price")
+    coupon = payload.get("coupon")
 
     obj_type = context.type_name
     prices = app_settings["stripe"].get("subscriptions", {}).get(obj_type, [])
@@ -217,6 +218,7 @@ async def subscribe(context, request):
         path=path,
         db=db.id,
         trial=trial,
+        coupon=coupon
     )
 
     if subscription.get("id") is not None:
@@ -348,4 +350,3 @@ async def webhook_deleted(event):
                 bhr.trailing = False
                 obj.register()
                 await notify(ObjectFailedEvent(obj, event.data))
-
