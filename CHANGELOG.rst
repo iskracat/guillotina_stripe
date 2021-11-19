@@ -4,7 +4,8 @@ CHANGELOG
 1.0.0a8 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Adding support for coupons in subscripions and products
+  [nilbacardit26]
 
 
 1.0.0a7 (2021-03-12)
