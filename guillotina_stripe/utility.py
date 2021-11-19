@@ -233,7 +233,7 @@ class StripePayUtility(object):
 
         return body
 
-    async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: str):
+    async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: Optional[str] = None):
         # Check subscription
         subs = await self.get_subscriptions(customer)
 
