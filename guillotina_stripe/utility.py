@@ -7,6 +7,7 @@ import time
 from hashlib import sha256
 from guillotina_stripe.util import secure_compare
 from collections import OrderedDict
+from typing import Optional
 
 logger = logging.getLogger("guillotina_stripe")
 
@@ -207,7 +208,7 @@ class StripePayUtility(object):
         return amount
 
     async def create_paymentintent(
-            self, payment_method, currency, amount, description, customer, shipping, path, db, coupon: str
+            self, payment_method, currency, amount, description, customer, shipping, path, db, coupon: Optional[str] = None
     ):
         url = "/v1/payment_intents"
 
