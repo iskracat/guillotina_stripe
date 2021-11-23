@@ -4,7 +4,8 @@ CHANGELOG
 1.0.0a9 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fixing API response in subscriptions
+  [nilbacardit26]
 
 
 1.0.0a8 (2021-11-19)
