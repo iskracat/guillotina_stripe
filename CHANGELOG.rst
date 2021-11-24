@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a10 (unreleased)
+1.0.0a10 (2021-11-24)
 ---------------------
 
 - Be able to update customer when calling @register-card, customer_id
