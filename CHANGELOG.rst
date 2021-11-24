@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a9 (unreleased)
+1.0.0a9 (2021-11-24)
 --------------------
 
 - Fixing API response in subscriptions
