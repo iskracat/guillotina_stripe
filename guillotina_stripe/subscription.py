@@ -222,7 +222,7 @@ async def subscribe(context, request):
     )
 
     if subscription.get("id") is not None:
-        if subscription.get("status") == "trailing":
+        if subscription.get("status") == "trailing" or subscription.get("status") == "trialing":
             bhr.trailing = True
             bhr.paid = False
             bhr.trial_end = subscription.get("trial_end")
