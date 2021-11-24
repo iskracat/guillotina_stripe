@@ -4,7 +4,8 @@ CHANGELOG
 1.0.0a10 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Be able to update customer when calling @register-card, customer_id
+  can be passed as a parameter
 
 
 1.0.0a9 (2021-11-24)

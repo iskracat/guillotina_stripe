@@ -82,7 +82,7 @@ async def register_paymentmethod(context, request):
 
     bhr.billing_email = billing_email
     util: StripePayUtility = get_utility(IStripePayUtility)
-    customer = await util.set_customer(billing_email)
+    customer = await util.set_customer(billing_email, payload.get("customer_id", None))
     taxid = payload.get("tax")
 
     customerid = customer.get("id", None)
