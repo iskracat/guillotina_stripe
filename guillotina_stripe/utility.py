@@ -201,7 +201,7 @@ class StripePayUtility(object):
                     amount -= body.get("amount_off")
                 elif body.get("percent_off"):
                     amount -= (amount * (body["percent_off"] / 100))
-                if amount <= 50:
+                if amount < 50:
                     amount = 50
         except Exception:
             amount = valid_amount

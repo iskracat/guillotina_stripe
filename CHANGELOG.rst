@@ -6,6 +6,9 @@ CHANGELOG
 
 - Fixing amount in coupons when paying products. Adding tests.
   [nilbacardit26]
+- When amount to pay using coupons is below 50cts, the total
+  payment would be 50cts, due to slack does not admit payment below 50cts.
+  [nilbacardit26]
 
 1.0.0a10 (2021-11-24)
 ---------------------
