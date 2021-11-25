@@ -198,14 +198,14 @@ class StripePayUtility(object):
             async with self.session.get(f"{BASE_URL}/{url_coupon}") as resp:
                 body = await resp.json()
                 if body.get("amount_off"):
-                    amount -= body.get("amount_off") / 100
+                    amount -= body.get("amount_off")
                 elif body.get("percent_off"):
                     amount -= (amount * (body["percent_off"] / 100))
-                if amount < 0:
-                    raise
+                if amount < 50:
+                    amount = 50
         except Exception:
             amount = valid_amount
-        return amount
+        return int(amount)
 
     async def create_paymentintent(
             self, payment_method, currency, amount, description, customer, shipping, path, db, coupon: Optional[str] = None

@@ -274,6 +274,7 @@ async def test_pay_product_us(container_requester):
             })
         )
         assert resp['status'] == 'succeeded'
+        total_amount = resp["amount_received"]
         await asyncio.sleep(1)
         resp, status_code = await requester(
             "GET",
@@ -281,6 +282,32 @@ async def test_pay_product_us(container_requester):
         )
         assert resp['ispaid'] is True
 
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/product/@pay",
+            data=json.dumps({
+                'pmid': pmid,
+                'price': 'price_1I0UJWGeGvgK89lRf4C1Qt7z',
+                'quantity': 20,
+                'coupon': "foo-coupon-25"
+            })
+        )
+        assert resp['status'] == 'succeeded'
+        assert resp["amount_received"] == int(total_amount - (total_amount * 0.25))
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/product/@pay",
+            data=json.dumps({
+                'pmid': pmid,
+                'price': 'price_1I0UJWGeGvgK89lRf4C1Qt7z',
+                'quantity': 20,
+                'coupon': "coupon-2-euros"
+            })
+        )
+        assert resp['status'] == 'succeeded'
+        # Diescout 2 euros: 200
+        assert resp["amount_received"] == total_amount - 200
 
 @pytest.mark.asyncio
 async def test_pay_product_eu(container_requester):
@@ -367,13 +394,18 @@ async def test_coupon_utility(container_requester):
     async with container_requester:
         utility = get_utility(IStripePayUtility)
         # Applying 25% coupon
-        amount = await utility.get_total_amount_applying_coupon(coupon="foo-coupon-25", amount=10)
-        assert amount == 7.5
+        amount = await utility.get_total_amount_applying_coupon(coupon="foo-coupon-25", amount=1000)
+        assert amount == 750
 
         # Coupon does not exists
-        amount = await utility.get_total_amount_applying_coupon(coupon="invalid-coupon-404", amount=10)
-        assert amount == 10
+        amount = await utility.get_total_amount_applying_coupon(coupon="invalid-coupon-404", amount=1000)
+        assert amount == 1000
 
         # Coupon of 2 euros
-        amount = await utility.get_total_amount_applying_coupon(coupon="coupon-2-euros", amount=10)
-        assert amount == 8
+        amount = await utility.get_total_amount_applying_coupon(coupon="coupon-2-euros", amount=1000)
+        assert amount == 800
+
+        # Coupon of 2 euros
+        # Stripe does not admit payment below 50 (0.5 euros). In that case, pay 50
+        amount = await utility.get_total_amount_applying_coupon(coupon="coupon-2-euros", amount=200)
+        assert amount == 50
