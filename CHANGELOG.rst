@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0a11 (unreleased)
+1.0.0a11 (2021-11-25)
 ---------------------
 
 - Fixing amount in coupons when paying products. Adding tests.
