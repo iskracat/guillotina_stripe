@@ -231,7 +231,6 @@ async def pay_bought(context, request):
         }
 
     total = price_obj['unit_amount'] * quantity
-
     charge = await util.create_paymentintent(
         description=f"{obj_type} {context.id} {quantity}",
         path=path,
