@@ -152,12 +152,12 @@ async def unsubscribe(context, request):
     util = get_utility(IStripePayUtility)
     bhr = ISubscription(context)
     if bhr.subscription is not None and bhr.customer is not None:
-        await util.cancel_subscription(bhr.customer, bhr.subscription)
+        await util.cancel_subscription(bhr.subscription)
     subscriptions = await util.get_subscriptions(customer=bhr.customer)
     for subscription in subscriptions:
-        await util.cancel_subscription(subscription["customer"], subscription["id"])
+        await util.cancel_subscription(subscription["id"])
     bhr.subscription = None
-    bhr.customer = None
+
     bhr.register()
 
 
@@ -204,7 +204,8 @@ async def subscribe(context, request):
             if price == orig_price['price']:
                 trial = orig_price.get('trial', 0)
         if trial is None:
-            raise HTTPPreconditionFailed(content={"reason": "No price and no trial"})
+            raise HTTPPreconditionFailed(
+                content={"reason": "No price and no trial"})
     else:
         raise HTTPPreconditionFailed(content={"reason": "No price"})
 
@@ -331,7 +332,6 @@ async def webhook_trailend(event):
 
 @configure.subscriber(for_=ICustomerSubscriptionDeleted)
 async def webhook_deleted(event):
-
     if event.data["object"] == "subscription":
         metadata = event.data.get("metadata", {})
         path = metadata.get("path", None)

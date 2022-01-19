@@ -1,6 +1,160 @@
 import pytest
 import json
 
+PAYLOAD_CANCEL_SUBSCRIPTION = {
+    "id": "evt_1I0SkiGeGvgK89lRJLGcWcdq",
+    "object": "event",
+    "api_version": "2020-08-27",
+    "created": 1608473956,
+    "livemode": False,
+    "pending_webhooks": 1,
+    "request": {
+        "id": None,
+        "idempotency_key": "pi_1I0SjpGeGvgK89lRRpzTMumY-src_1I0SjqGeGvgK89lRNMDOYVAt"
+    },
+    "type": "customer.subscription.deleted",
+    "data": {
+        "object": {
+            "id": "sub_1Js0mcGeGvgK89lRv7MzzFzM",
+            "object": "subscription",
+            "application_fee_percent": None,
+            "automatic_tax": {
+                "enabled": False
+            },
+            "billing_cycle_anchor": 1641282890,
+            "billing_thresholds": None,
+            "cancel_at": None,
+            "cancel_at_period_end": False,
+            "canceled_at": 1642582735,
+            "collection_method": "charge_automatically",
+            "created": 1636012490,
+            "current_period_end": 1672818890,
+            "current_period_start": 1641282890,
+            "customer": "cus_KX4wzAxijbbUcz",
+            "days_until_due": None,
+            "default_payment_method": None,
+            "default_source": None,
+            "default_tax_rates": [
+            ],
+            "discount": None,
+            "ended_at": 1642582735,
+            "items": {
+                "object": "list",
+                "data": [
+                    {
+                        "id": "si_KX4wKrpUWJj7gk",
+                        "object": "subscription_item",
+                        "billing_thresholds": None,
+                        "created": 1636012490,
+                        "metadata": {
+                        },
+                        "plan": {
+                            "id": "price_1HNZgfGeGvgK89lR4RYWNb42",
+                            "object": "plan",
+                            "active": True,
+                            "aggregate_usage": None,
+                            "amount": 4900,
+                            "amount_decimal": "4900",
+                            "billing_scheme": "per_unit",
+                            "created": 1599205821,
+                            "currency": "eur",
+                            "interval": "year",
+                            "interval_count": 1,
+                            "livemode": True,
+                            "metadata": {
+                            },
+                            "nickname": None,
+                            "product": "prod_HxUgWVDT3R3AWI",
+                            "tiers_mode": None,
+                            "transform_usage": None,
+                            "trial_period_days": 60,
+                            "usage_type": "licensed"
+                        },
+                        "price": {
+                            "id": "price_1HNZgfGeGvgK89lR4RYWNb42",
+                            "object": "price",
+                            "active": True,
+                            "billing_scheme": "per_unit",
+                            "created": 1599205821,
+                            "currency": "eur",
+                            "livemode": True,
+                            "lookup_key": None,
+                            "metadata": {
+                            },
+                            "nickname": None,
+                            "product": "prod_HxUgWVDT3R3AWI",
+                            "recurring": {
+                                "aggregate_usage": None,
+                                "interval": "year",
+                                "interval_count": 1,
+                                "trial_period_days": 60,
+                                "usage_type": "licensed"
+                            },
+                            "tax_behavior": "unspecified",
+                            "tiers_mode": None,
+                            "transform_quantity": None,
+                            "type": "recurring",
+                            "unit_amount": 4900,
+                            "unit_amount_decimal": "4900"
+                        },
+                        "quantity": 1,
+                        "subscription": "sub_1Js0mcGeGvgK89lRv7MzzFzM",
+                        "tax_rates": [
+                        ]
+                    }
+                ],
+                "has_more": False,
+                "total_count": 1,
+                "url": "/v1/subscription_items?subscription=sub_1Js0mcGeGvgK89lRv7MzzFzM"
+            },
+            "latest_invoice": "in_1KE7rNGeGvgK89lRTNQOI0lc",
+            "livemode": True,
+            "metadata": {
+                "path": "/guillotina/subscription",
+                "db": "db"
+            },
+            "next_pending_invoice_item_invoice": None,
+            "pause_collection": None,
+            "payment_settings": {
+                "payment_method_options": None,
+                "payment_method_types": None
+            },
+            "pending_invoice_item_interval": None,
+            "pending_setup_intent": None,
+            "pending_update": None,
+            "plan": {
+                "id": "price_1HNZgfGeGvgK89lR4RYWNb42",
+                "object": "plan",
+                "active": True,
+                "aggregate_usage": None,
+                "amount": 4900,
+                "amount_decimal": "4900",
+                "billing_scheme": "per_unit",
+                "created": 1599205821,
+                "currency": "eur",
+                "interval": "year",
+                "interval_count": 1,
+                "livemode": True,
+                "metadata": {
+                },
+                "nickname": None,
+                "product": "prod_HxUgWVDT3R3AWI",
+                "tiers_mode": None,
+                "transform_usage": None,
+                "trial_period_days": 60,
+                "usage_type": "licensed"
+            },
+            "quantity": 1,
+            "schedule": None,
+            "start_date": 1636012490,
+            "status": "canceled",
+            "transfer_data": None,
+            "trial_end": 1641282890,
+            "trial_start": 1636012490
+        }
+    }
+}
+
 
 PAYLOAD = {
     "id": "evt_1I0SkiGeGvgK89lRJLGcWcdq",
@@ -165,13 +319,15 @@ PAYLOAD = {
     "type": "invoice.paid"
 }
 
+
 @pytest.mark.asyncio
 async def test_pay_subscription_us(container_requester):
     async with container_requester as requester:
         resp, status_code = await requester(
             "POST",
             "/db/guillotina/",
-            data=json.dumps({"@type": "CustomSubscriptionType", "id": "subscription"}),
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
         )
 
         assert status_code == 201
@@ -249,13 +405,15 @@ async def test_pay_subscription_us(container_requester):
         assert resp['status'] == 'active'
         assert isinstance(resp["discount"], dict)
 
+
 @pytest.mark.asyncio
 async def test_pay_subscription_eu(container_requester):
     async with container_requester as requester:
         resp, status_code = await requester(
             "POST",
             "/db/guillotina/",
-            data=json.dumps({"@type": "CustomSubscriptionType", "id": "subscription"}),
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
         )
 
         assert status_code == 201
@@ -298,7 +456,7 @@ async def test_pay_subscription_eu(container_requester):
         )
 
         assert resp['status'] == 'incomplete'
-        action = resp['latest_invoice']['payment_intent']['next_action'] 
+        action = resp['latest_invoice']['payment_intent']['next_action']
         assert action['type'] == 'use_stripe_sdk'
         assert action['use_stripe_sdk']['type'] == 'three_d_secure_redirect'
 
@@ -316,3 +474,99 @@ async def test_pay_subscription_eu(container_requester):
         )
 
         assert resp['subscribed'] == True
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_delete_it_and_keep_cards(container_requester):
+    async with container_requester as requester:
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/",
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
+        )
+
+        assert status_code == 201
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@register-card",
+            data=json.dumps({
+                "email": "test@test.com",
+                "number": "4242424242424242",
+                "expMonth": "12",
+                "expYear": "2030",
+                "cvc": "123",
+                "cardholderName": "Test user",
+                "address": "C\ Carrer 99",
+                "state": "Barcelona",
+                "city": "Barcelona",
+                "cp": "08000",
+                "country": "ES",
+                "phone": "000000000"
+            })
+        )
+
+        pmid = resp['id']
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid
+            })
+        )
+
+        assert resp['status'] == 'active'
+
+        resp, status_code = await requester(
+            "POST",
+            "/@stripe",
+            data=json.dumps(PAYLOAD)
+        )
+
+        assert resp['status'] == 'success'
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription",
+        )
+        assert resp['subscribed'] == True
+
+        resp, status_code = await requester(
+            "DELETE",
+            "/db/guillotina/subscription/@subscribe",
+        )
+
+        assert status_code == 200
+
+        resp, status_code = await requester(
+            "POST",
+            "/@stripe",
+            data=json.dumps(PAYLOAD_CANCEL_SUBSCRIPTION)
+        )
+
+        assert resp['status'] == 'success'
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription",
+        )
+        assert resp['subscribed'] == False
+        assert resp['guillotina_stripe.interfaces.ISubscription']['subscription'] is None
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
