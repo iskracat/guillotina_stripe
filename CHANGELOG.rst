@@ -1,10 +1,10 @@
 CHANGELOG
 =========
 
-1.0.0a12 (unreleased)
+1.0.0a12 (2022-01-18)
 ---------------------
 
-- Nothing changed yet.
+- Not delete consumer after cancel subscription [rboixaderg]
 
 
 1.0.0a11 (2021-11-25)
