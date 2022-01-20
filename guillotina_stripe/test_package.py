@@ -10,6 +10,22 @@ from guillotina.schema import Bool
 app_settings = {"applications": ["guillotina"]}
 
 
+class ICustomCardsType(IItem):
+    pass
+
+
+@configure.contenttype(
+    type_name="CustomCardsType",
+    behaviors=[
+        "guillotina.behaviors.dublincore.IDublinCore",
+        "guillotina_stripe.interfaces.IStripeCards",
+    ],
+    schema=ICustomCardsType,
+)
+class CustomCardsType(Item):
+    pass
+
+
 class ICustomProductType(IItem):
     ispaid = Bool(title="Is paid", default=False, required=False)
 
@@ -24,7 +40,6 @@ class ICustomProductType(IItem):
 )
 class CustomProductType(Item):
     pass
-
 
 
 class ICustomSubscriptionType(IFolder):
@@ -51,6 +66,7 @@ def subscribed(obj, event):
     obj.subscribed = True
     obj.register()
 
+
 @configure.subscriber(
     for_=(ICustomSubscriptionType, IObjectTrailingEvent)
 )
@@ -66,6 +82,7 @@ def unsubscribed(obj, event):
     obj.subscribed = False
     obj.register()
 
+
 @configure.subscriber(
     for_=(ICustomProductType, IObjectPaidEvent)
 )
@@ -80,4 +97,3 @@ def subscribed(obj, event):
 def unsubscribed(obj, event):
     obj.ispaid = False
     obj.register()
-

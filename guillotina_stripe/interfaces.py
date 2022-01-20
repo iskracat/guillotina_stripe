@@ -129,11 +129,13 @@ class ISubscription(Interface):
 
     write_permission(current_period_end="guillotina.Nobody")
     read_permission(current_period_end="guillotina.Owner")
-    current_period_end = schema.Int(title="Stripe subscription", required=False)
+    current_period_end = schema.Int(
+        title="Stripe subscription", required=False)
 
     write_permission(current_period_start="guillotina.Nobody")
     read_permission(current_period_start="guillotina.Owner")
-    current_period_start = schema.Int(title="Stripe subscription", required=False)
+    current_period_start = schema.Int(
+        title="Stripe subscription", required=False)
 
     write_permission(price_id="guillotina.Nobody")
     read_permission(price_id="guillotina.Owner")
@@ -166,3 +168,18 @@ class IStripeConfiguration(Interface):
     subscription_prices = schema.JSONField(
         title="Subscription prices definition", required=False, schema=PRICES
     )
+
+
+class IMarkerCards(Interface):
+    """Marker interface for content with cards."""
+
+
+class IStripeCards(Interface):
+
+    write_permission(customer="guillotina.Nobody")
+    read_permission(customer="guillotina.Owner")
+    customer = schema.Text(title="Stripe customer", required=False)
+
+    write_permission(billing_email="guillotina.Nobody")
+    read_permission(billing_email="guillotina.Owner")
+    billing_email = schema.Text(title="Billing email", required=False)

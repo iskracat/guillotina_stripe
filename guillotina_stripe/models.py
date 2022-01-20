@@ -24,7 +24,7 @@ class BillingDetails(BaseModel):
 
 class Subscription(BaseModel):
     id: str
-    default_payment_method: str
+    default_payment_method: Optional[str]
     current_period_end: int
     current_period_start: int
     status: str

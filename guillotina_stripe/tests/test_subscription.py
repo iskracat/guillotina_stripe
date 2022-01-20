@@ -337,7 +337,7 @@ async def test_pay_subscription_us(container_requester):
             "/db/guillotina/subscription/@subscriptions",
         )
 
-        resp['error'] == 'No customer'
+        assert resp['error'] == 'No customer'
 
         resp, status_code = await requester(
             "GET",
@@ -383,9 +383,9 @@ async def test_pay_subscription_us(container_requester):
                 'pmid': pmid
             })
         )
+
         assert resp['status'] == 'active'
         assert resp["discount"] is None
-        total_amount = resp["items"]["data"][0]["plan"]["amount"]
 
         resp, status_code = await requester(
             "GET",
@@ -395,6 +395,47 @@ async def test_pay_subscription_us(container_requester):
         assert resp['subscribed'] is True
 
         resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@subscriptions",
+        )
+        assert status_code == 200
+        assert len(resp['data']) == 1
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_us_with_coupon(container_requester):
+    async with container_requester as requester:
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/",
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
+        )
+
+        assert status_code == 201
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@register-card",
+            data=json.dumps({
+                "email": "test@test.com",
+                "number": "4242424242424242",
+                "expMonth": "12",
+                "expYear": "2030",
+                "cvc": "123",
+                "cardholderName": "Test user",
+                "address": "C\ Carrer 99",
+                "state": "Barcelona",
+                "city": "Barcelona",
+                "cp": "08000",
+                "country": "ES",
+                "phone": "000000000"
+            })
+        )
+
+        pmid = resp['id']
+
+        resp, status_code = await requester(
             "POST",
             "/db/guillotina/subscription/@subscribe",
             data=json.dumps({
@@ -402,8 +443,63 @@ async def test_pay_subscription_us(container_requester):
                 'coupon': "foo-coupon-25"
             })
         )
+
         assert resp['status'] == 'active'
         assert isinstance(resp["discount"], dict)
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_us_error_double_subscription(container_requester):
+    async with container_requester as requester:
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/",
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
+        )
+
+        assert status_code == 201
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@register-card",
+            data=json.dumps({
+                "email": "test@test.com",
+                "number": "4242424242424242",
+                "expMonth": "12",
+                "expYear": "2030",
+                "cvc": "123",
+                "cardholderName": "Test user",
+                "address": "C\ Carrer 99",
+                "state": "Barcelona",
+                "city": "Barcelona",
+                "cp": "08000",
+                "country": "ES",
+                "phone": "000000000"
+            })
+        )
+
+        pmid = resp['id']
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid,
+            })
+        )
+        assert status_code == 200
+        assert resp['status'] == 'active'
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid,
+            })
+        )
+        assert status_code == 412
+        assert resp['reason'] == "Subscription already exist"
 
 
 @pytest.mark.asyncio

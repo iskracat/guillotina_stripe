@@ -238,13 +238,6 @@ class StripePayUtility(object):
         return body
 
     async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: Optional[str] = None):
-        # Check subscription
-        subs = await self.get_subscriptions(customer)
-
-        valid_subs = [sub for sub in subs if sub.products["price"] == price]
-        for sub in valid_subs:
-            await self.cancel_subscription(sub.id)
-
         url = f"/v1/subscriptions"
 
         subsdata = {
@@ -282,8 +275,7 @@ class StripePayUtility(object):
 
         async with self.session.get(
             BASE_URL + url,
-            data={"customer": customer,
-                  "expand[]": "latest_invoice.payment_intent"},
+            params={"customer": customer},
         ) as resp:
             body = await resp.json()
 

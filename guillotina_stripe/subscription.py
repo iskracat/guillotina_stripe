@@ -151,13 +151,11 @@ async def subscriptions(context, request):
 async def unsubscribe(context, request):
     util = get_utility(IStripePayUtility)
     bhr = ISubscription(context)
+
     if bhr.subscription is not None and bhr.customer is not None:
         await util.cancel_subscription(bhr.subscription)
-    subscriptions = await util.get_subscriptions(customer=bhr.customer)
-    for subscription in subscriptions:
-        await util.cancel_subscription(subscription["id"])
-    bhr.subscription = None
 
+    bhr.subscription = None
     bhr.register()
 
 
@@ -185,13 +183,23 @@ async def subscribe(context, request):
     payload = await request.json()
     bhr = ISubscription(context)
 
-    if bhr.customer is None:
+    if bhr.subscription is not None:
+        raise HTTPPreconditionFailed(
+            content={"reason": "Subscription already exist"})
+
+    customer = payload.get('customer', bhr.customer)
+    if customer is None:
         raise HTTPPreconditionFailed(content={"reason": "No customer"})
 
     util = get_utility(IStripePayUtility)
     pmid = payload.get("pmid")
     price = payload.get("price")
     coupon = payload.get("coupon")
+
+    if bhr.customer is None:
+        customer_response = await util.get_customer(customer)
+        bhr.customer = customer
+        bhr.billing_email = customer_response['email']
 
     obj_type = context.type_name
     prices = app_settings["stripe"].get("subscriptions", {}).get(obj_type, [])
@@ -213,7 +221,7 @@ async def subscribe(context, request):
     db = task_vars.db.get()
 
     subscription = await util.create_subscription(
-        customer=bhr.customer,
+        customer=customer,
         price=price,
         payment_method=pmid,
         path=path,
