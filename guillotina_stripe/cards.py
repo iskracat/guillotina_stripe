@@ -103,4 +103,5 @@ async def register_paymentmethod(context, request):
         await util.attach_payment_method(pmid, customerid)
         await util.modify_customer(pmid, customerid)
     context.register()
+    result['customer'] = customerid
     return result

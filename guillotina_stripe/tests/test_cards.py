@@ -69,6 +69,7 @@ async def test_cards(container_requester):
         )
         assert status_code == 200
         pmid = resp['id']
+        customer = resp['customer']
 
         resp, status_code = await requester(
             "GET",
@@ -77,14 +78,6 @@ async def test_cards(container_requester):
 
         assert status_code == 200
         assert len(resp['data']) == 1
-
-        resp, status_code = await requester(
-            "GET",
-            "/db/guillotina/cards",
-        )
-
-        assert status_code == 200
-        customer = resp['guillotina_stripe.interfaces.IStripeCards']['customer']
 
         resp, status_code = await requester(
             "POST",
