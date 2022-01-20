@@ -16,8 +16,8 @@ def base_settings_configurator(settings):
         "provides": "guillotina_stripe.interfaces.IStripePayUtility",
         "factory": "guillotina_stripe.utility.StripePayUtility",
         "settings": {
-            "secret": os.environ.get("STRIPE_KEY", "sk_test_51ALBplGeGvgK89lRFefDLO25NO72Q8NbSR4MHAaAQpB9MuoVGWW61va9V8dLt6IqQgDSKrt2tMgIxozrMtmLbop700dcPnjHda"),
-            "signing": os.environ.get("SIGNING", "pk_test_XSVr7Cj8yI8kG7HJBVI0kqqx"),
+            "secret": os.environ.get("STRIPE_KEY", ""),
+            "signing": os.environ.get("SIGNING", ""),
             "testing": True
         },
     }
