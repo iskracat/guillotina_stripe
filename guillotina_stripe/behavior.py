@@ -2,7 +2,9 @@ from guillotina_stripe.interfaces import (
     IProduct,
     IMarkerProduct,
     IMarkerSubscription,
+    IMarkerCards,
     ISubscription,
+    IStripeCards
 )
 from guillotina import configure
 from guillotina.behaviors.instance import ContextBehavior
@@ -25,4 +27,14 @@ class SubscriptionBehavior(ContextBehavior):
     for_="guillotina.interfaces.IResource",
 )
 class ProductBehavior(ContextBehavior):
+    pass
+
+
+@configure.behavior(
+    title="Cards behavior fields",
+    provides=IStripeCards,
+    marker=IMarkerCards,
+    for_="guillotina.interfaces.IResource",
+)
+class CardsBehavior(ContextBehavior):
     pass

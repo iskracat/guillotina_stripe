@@ -1,177 +1,31 @@
+import os
+import os
 import pytest
 import json
+from guillotina_stripe.tests.payloads import PAYLOAD, PAYLOAD_CANCEL_SUBSCRIPTION
+from guillotina.tests.utils import ContainerRequesterAsyncContextManager
 
-
-PAYLOAD = {
-    "id": "evt_1I0SkiGeGvgK89lRJLGcWcdq",
-    "object": "event",
-    "api_version": "2020-08-27",
-    "created": 1608473956,
-    "data": {
-        "object": {
-            "id": "in_1I0SjpGeGvgK89lRLJThS7KK",
-            "object": "invoice",
-            "account_country": "ES",
-            "account_name": "BLABLA",
-            "account_tax_ids": None,
-            "amount_due": 4000,
-            "amount_paid": 4000,
-            "amount_remaining": 0,
-            "application_fee_amount": None,
-            "attempt_count": 1,
-            "attempted": True,
-            "auto_advance": False,
-            "billing_reason": "subscription_create",
-            "charge": "ch_1I0SkhGeGvgK89lR2sGeIYZk",
-            "collection_method": "charge_automatically",
-            "created": 1608473901,
-            "currency": "eur",
-            "custom_fields": None,
-            "customer": "cus_Ibg5fE2K1XzMCI",
-            "customer_address": None,
-            "customer_email": "test@test.com",
-            "customer_name": None,
-            "customer_phone": None,
-            "customer_shipping": None,
-            "customer_tax_exempt": "none",
-            "customer_tax_ids": [],
-            "default_payment_method": None,
-            "default_source": None,
-            "default_tax_rates": [],
-            "description": None,
-            "discount": None,
-            "discounts": [],
-            "due_date": None,
-            "ending_balance": 0,
-            "footer": None,
-            "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1ALBplGeGvgK89lR/invst_Ibg6zwbCjxVMacznqYPWJnva41oKtDF",
-            "invoice_pdf": "https://pay.stripe.com/invoice/acct_1ALBplGeGvgK89lR/invst_Ibg6zwbCjxVMacznqYPWJnva41oKtDF/pdf",
-            "last_finalization_error": None,
-            "lines": {
-                "object": "list",
-                "data": [
-                    {
-                        "id": "il_1I0SjpGeGvgK89lRpkXE3p4M",
-                        "object": "line_item",
-                        "amount": 4000,
-                        "currency": "eur",
-                        "description": "1 × Subscripció TESTING (at €40.00 / year)",
-                        "discount_amounts": [],
-                        "discountable": True,
-                        "discounts": [],
-                        "livemode": False,
-                        "metadata": {
-                            "path": "/guillotina/subscription",
-                            "db": "db"
-                        },
-                        "period": {
-                            "end": 1640009901,
-                            "start": 1608473901
-                        },
-                        "plan": {
-                            "id": "price_1HNb9XGeGvgK89lRkF3KPEgs",
-                            "object": "plan",
-                            "active": True,
-                            "aggregate_usage": None,
-                            "amount": 4000,
-                            "amount_decimal": "4000",
-                            "billing_scheme": "per_unit",
-                            "created": 1599211455,
-                            "currency": "eur",
-                            "interval": "year",
-                            "interval_count": 1,
-                            "livemode": False,
-                            "metadata": {},
-                            "nickname": None,
-                            "product": "prod_HxWBZBSRA1ZV1H",
-                            "tiers_mode": None,
-                            "transform_usage": None,
-                            "trial_period_days": None,
-                            "usage_type": "licensed"
-                        },
-                        "price": {
-                            "id": "price_1HNb9XGeGvgK89lRkF3KPEgs",
-                            "object": "price",
-                            "active": True,
-                            "billing_scheme": "per_unit",
-                            "created": 1599211455,
-                            "currency": "eur",
-                            "livemode": False,
-                            "lookup_key": None,
-                            "metadata": {},
-                            "nickname": None,
-                            "product": "prod_HxWBZBSRA1ZV1H",
-                            "recurring": {
-                                "aggregate_usage": None,
-                                "interval": "year",
-                                "interval_count": 1,
-                                "trial_period_days": None,
-                                "usage_type": "licensed"
-                            },
-                            "tiers_mode": None,
-                            "transform_quantity": None,
-                            "type": "recurring",
-                            "unit_amount": 4000,
-                            "unit_amount_decimal": "4000"
-                        },
-                        "proration": False,
-                        "quantity": 1,
-                        "subscription": "sub_Ibg6j4TZGkDH3d",
-                        "subscription_item": "si_Ibg6YxvR24GDQu",
-                        "tax_amounts": [],
-                        "tax_rates": [],
-                        "type": "subscription"
-                    }
-                ],
-                "has_more": False,
-                "total_count": 1,
-                "url": "/v1/invoices/in_1I0SjpGeGvgK89lRLJThS7KK/lines"
-            },
-            "livemode": False,
-            "next_payment_attempt": None,
-            "number": "DD59E763-0001",
-            "paid": True,
-            "payment_intent": "pi_1I0SjpGeGvgK89lRRpzTMumY",
-            "period_end": 1608473901,
-            "period_start": 1608473901,
-            "post_payment_credit_notes_amount": 0,
-            "pre_payment_credit_notes_amount": 0,
-            "receipt_number": None,
-            "starting_balance": 0,
-            "statement_descriptor": None,
-            "status": "paid",
-            "status_transitions": {
-                "finalized_at": 1608473901,
-                "marked_uncollectible_at": None,
-                "paid_at": 1608473955,
-                "voided_at": None
-            },
-            "subscription": "sub_Ibg6j4TZGkDH3d",
-            "subtotal": 4000,
-            "tax": None,
-            "total": 4000,
-            "total_discount_amounts": [],
-            "total_tax_amounts": [],
-            "transfer_data": None,
-            "webhooks_delivered_at": None
+TRAILING_DEFAULT_SETTINGS = {
+    "stripe": {
+        "subscriptions": {
+            "CustomSubscriptionType": [{"trial": 10000, "price": "price_1HNb9XGeGvgK89lRkF3KPEgs"}]
+        },
+        "products": {
+            "CustomProductType": ["price_1I0UIuGeGvgK89lReW6fQzYM", "price_1I0UJWGeGvgK89lRf4C1Qt7z"]
         }
-    },
-    "livemode": False,
-    "pending_webhooks": 1,
-    "request": {
-        "id": None,
-        "idempotency_key": "pi_1I0SjpGeGvgK89lRRpzTMumY-src_1I0SjqGeGvgK89lRNMDOYVAt"
-    },
-    "type": "invoice.paid"
+    }
 }
 
-@pytest.mark.asyncio
-async def test_pay_subscription_us(container_requester):
-    async with container_requester as requester:
-        resp, status_code = await requester(
+
+class InitSubscription(ContainerRequesterAsyncContextManager):
+    async def __aenter__(self):
+        requester = await super().__aenter__()
+
+        _, status_code = await requester(
             "POST",
             "/db/guillotina/",
-            data=json.dumps({"@type": "CustomSubscriptionType", "id": "subscription"}),
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
         )
 
         assert status_code == 201
@@ -181,7 +35,7 @@ async def test_pay_subscription_us(container_requester):
             "/db/guillotina/subscription/@subscriptions",
         )
 
-        resp['error'] == 'No customer'
+        assert resp['error'] == 'No customer'
 
         resp, status_code = await requester(
             "GET",
@@ -210,8 +64,17 @@ async def test_pay_subscription_us(container_requester):
             })
         )
 
-        pmid = resp['id']
+        return requester
 
+
+@pytest.fixture(scope='function')
+async def init_subscription(guillotina):
+    return InitSubscription(guillotina)
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_us(init_subscription):
+    async with init_subscription as requester:
         resp, status_code = await requester(
             "GET",
             "/db/guillotina/subscription/@cards",
@@ -219,6 +82,7 @@ async def test_pay_subscription_us(container_requester):
 
         assert status_code == 200
         assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
 
         resp, status_code = await requester(
             "POST",
@@ -227,9 +91,9 @@ async def test_pay_subscription_us(container_requester):
                 'pmid': pmid
             })
         )
+
         assert resp['status'] == 'active'
         assert resp["discount"] is None
-        total_amount = resp["items"]["data"][0]["plan"]["amount"]
 
         resp, status_code = await requester(
             "GET",
@@ -239,6 +103,26 @@ async def test_pay_subscription_us(container_requester):
         assert resp['subscribed'] is True
 
         resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@subscriptions",
+        )
+        assert status_code == 200
+        assert len(resp['data']) == 1
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_us_with_coupon(init_subscription):
+    async with init_subscription as requester:
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
+
+        resp, status_code = await requester(
             "POST",
             "/db/guillotina/subscription/@subscribe",
             data=json.dumps({
@@ -246,8 +130,43 @@ async def test_pay_subscription_us(container_requester):
                 'coupon': "foo-coupon-25"
             })
         )
+
         assert resp['status'] == 'active'
         assert isinstance(resp["discount"], dict)
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_us_error_double_subscription(init_subscription):
+    async with init_subscription as requester:
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid,
+            })
+        )
+        assert status_code == 200
+        assert resp['status'] == 'active'
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid,
+            })
+        )
+        assert status_code == 412
+        assert resp['reason'] == "Subscription already exist"
+
 
 @pytest.mark.asyncio
 async def test_pay_subscription_eu(container_requester):
@@ -255,7 +174,8 @@ async def test_pay_subscription_eu(container_requester):
         resp, status_code = await requester(
             "POST",
             "/db/guillotina/",
-            data=json.dumps({"@type": "CustomSubscriptionType", "id": "subscription"}),
+            data=json.dumps(
+                {"@type": "CustomSubscriptionType", "id": "subscription"}),
         )
 
         assert status_code == 201
@@ -298,7 +218,7 @@ async def test_pay_subscription_eu(container_requester):
         )
 
         assert resp['status'] == 'incomplete'
-        action = resp['latest_invoice']['payment_intent']['next_action'] 
+        action = resp['latest_invoice']['payment_intent']['next_action']
         assert action['type'] == 'use_stripe_sdk'
         assert action['use_stripe_sdk']['type'] == 'three_d_secure_redirect'
 
@@ -316,3 +236,142 @@ async def test_pay_subscription_eu(container_requester):
         )
 
         assert resp['subscribed'] == True
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_updated(init_subscription):
+    async with init_subscription as requester:
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid
+            })
+        )
+
+        assert resp['status'] == 'active'
+
+        resp, status_code = await requester(
+            "PATCH",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'cancel_at_period_end': True
+            })
+        )
+        assert resp['cancel_at_period_end'] == True
+
+
+@pytest.mark.asyncio
+@pytest.mark.app_settings(TRAILING_DEFAULT_SETTINGS)
+async def test_pay_subscription_trailing_canceled_and_reactivate(init_subscription):
+    async with init_subscription as requester:
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid
+            })
+        )
+
+        assert resp['status'] == 'trialing'
+
+        resp, status_code = await requester(
+            "DELETE",
+            "/db/guillotina/subscription/@subscribe",
+        )
+
+        assert status_code == 200
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid
+            })
+        )
+
+        assert resp['status'] == 'active'
+
+
+@pytest.mark.asyncio
+async def test_pay_subscription_delete_it_and_keep_cards(init_subscription):
+    async with init_subscription as requester:
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1
+        pmid = resp['data'][0]['id']
+
+        resp, status_code = await requester(
+            "POST",
+            "/db/guillotina/subscription/@subscribe",
+            data=json.dumps({
+                'pmid': pmid
+            })
+        )
+
+        assert resp['status'] == 'active'
+
+        resp, status_code = await requester(
+            "POST",
+            "/@stripe",
+            data=json.dumps(PAYLOAD)
+        )
+
+        assert resp['status'] == 'success'
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription",
+        )
+        assert resp['subscribed'] == True
+
+        resp, status_code = await requester(
+            "DELETE",
+            "/db/guillotina/subscription/@subscribe",
+        )
+
+        assert status_code == 200
+
+        resp, status_code = await requester(
+            "POST",
+            "/@stripe",
+            data=json.dumps(PAYLOAD_CANCEL_SUBSCRIPTION)
+        )
+
+        assert resp['status'] == 'success'
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription",
+        )
+        assert resp['subscribed'] == False
+
+        resp, status_code = await requester(
+            "GET",
+            "/db/guillotina/subscription/@cards",
+        )
+
+        assert status_code == 200
+        assert len(resp['data']) == 1

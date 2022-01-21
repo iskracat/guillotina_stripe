@@ -41,7 +41,8 @@ class Webhook:
                 header, cls.EXPECTED_SCHEME
             )
         except Exception:
-            raise Exception("Unable to extract timestamp and signatures from header")
+            raise Exception(
+                "Unable to extract timestamp and signatures from header")
 
         if not signatures:
             raise Exception("No signatures found with expected scheme")
@@ -50,10 +51,12 @@ class Webhook:
         expected_sig = cls._compute_signature(signed_payload, secret)
 
         if not any(secure_compare(expected_sig, s) for s in signatures):
-            raise Exception("No signatures found matching the expected signature for")
+            raise Exception(
+                "No signatures found matching the expected signature for")
 
         if tolerance and timestamp < time.time() - tolerance:
-            raise Exception("Timestamp outside the tolerance zone (%d)" % timestamp)
+            raise Exception(
+                "Timestamp outside the tolerance zone (%d)" % timestamp)
 
         return True
 
@@ -156,7 +159,8 @@ class StripePayUtility(object):
 
         if billing_details is not None:
             data["billing_details[address][city]"] = (billing_details.city,)
-            data["billing_details[address][country]"] = (billing_details.country,)
+            data["billing_details[address][country]"] = (
+                billing_details.country,)
             data["billing_details[address][postal_code]"] = (
                 billing_details.postal_code,
             )
@@ -233,14 +237,18 @@ class StripePayUtility(object):
 
         return body
 
+    async def update_subscription(self, subscription, data):
+        url = f"/v1/subscriptions/{subscription}"
+
+        async with self.session.post(
+            self.api + url,
+            data=data,
+        ) as resp:
+            body = await resp.json()
+
+        return body
+
     async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: Optional[str] = None):
-        # Check subscription
-        subs = await self.get_subscriptions(customer)
-
-        valid_subs = [sub for sub in subs if sub.products["price"] == price]
-        for sub in valid_subs:
-            await self.cancel_subscription(customer, sub.id)
-
         url = f"/v1/subscriptions"
 
         subsdata = {
@@ -250,6 +258,7 @@ class StripePayUtility(object):
             "items[0][price]": price,
             "expand[]": "latest_invoice",
             "expand[]": "latest_invoice.payment_intent",
+            "default_payment_method": payment_method
         }
         if coupon is not None:
             subsdata["coupon"] = coupon
@@ -265,7 +274,7 @@ class StripePayUtility(object):
 
         return body
 
-    async def cancel_subscription(self, customer, subscription):
+    async def cancel_subscription(self, subscription):
         url = f"/v1/subscriptions/{subscription}"
 
         async with self.session.delete(self.api + url) as resp:
@@ -278,7 +287,7 @@ class StripePayUtility(object):
 
         async with self.session.get(
             BASE_URL + url,
-            data={"customer": customer, "expand[]": "latest_invoice.payment_intent"},
+            params={"customer": customer},
         ) as resp:
             body = await resp.json()
 
@@ -287,6 +296,16 @@ class StripePayUtility(object):
             result.append(Subscription(**subs))
 
         return result
+
+    async def get_subscription(self, subscription):
+        url = f"/v1/subscriptions/{subscription}"
+
+        async with self.session.get(
+            BASE_URL + url
+        ) as resp:
+            body = await resp.json()
+
+        return body
 
     async def get_event(self, payload, signature):
         if self.testing:

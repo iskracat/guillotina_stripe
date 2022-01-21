@@ -151,14 +151,30 @@ async def subscriptions(context, request):
 async def unsubscribe(context, request):
     util = get_utility(IStripePayUtility)
     bhr = ISubscription(context)
+
     if bhr.subscription is not None and bhr.customer is not None:
-        await util.cancel_subscription(bhr.customer, bhr.subscription)
-    subscriptions = await util.get_subscriptions(customer=bhr.customer)
-    for subscription in subscriptions:
-        await util.cancel_subscription(subscription["customer"], subscription["id"])
-    bhr.subscription = None
-    bhr.customer = None
+        await util.cancel_subscription(bhr.subscription)
     bhr.register()
+
+
+@configure.service(
+    method="PATCH",
+    name="@subscribe",
+    permission="guillotina.ModifyContent",
+    context=IMarkerSubscription,
+)
+async def update_subscription(context, request):
+    payload = await request.json()
+    util = get_utility(IStripePayUtility)
+    bhr = ISubscription(context)
+
+    if bhr.subscription is not None and bhr.customer is not None:
+        subscription = await util.update_subscription(bhr.subscription, payload)
+
+    bhr.cancel_at_period_end = subscription.get("cancel_at_period_end")
+    bhr.register()
+
+    return subscription
 
 
 @configure.service(
@@ -184,14 +200,29 @@ async def unsubscribe(context, request):
 async def subscribe(context, request):
     payload = await request.json()
     bhr = ISubscription(context)
+    util = get_utility(IStripePayUtility)
 
-    if bhr.customer is None:
+    can_activate_trial = True
+    if bhr.subscription is not None:
+        current_subscription = await util.get_subscription(bhr.subscription)
+        if current_subscription['status'] == 'canceled' or current_subscription['status'] == 'ended':
+            can_activate_trial = False
+        else:
+            raise HTTPPreconditionFailed(
+                content={"reason": "Subscription already exist"})
+
+    customer = payload.get('customer', bhr.customer)
+    if customer is None:
         raise HTTPPreconditionFailed(content={"reason": "No customer"})
 
-    util = get_utility(IStripePayUtility)
     pmid = payload.get("pmid")
     price = payload.get("price")
     coupon = payload.get("coupon")
+
+    if bhr.customer is None:
+        customer_response = await util.get_customer(customer)
+        bhr.customer = customer
+        bhr.billing_email = customer_response['email']
 
     obj_type = context.type_name
     prices = app_settings["stripe"].get("subscriptions", {}).get(obj_type, [])
@@ -204,15 +235,19 @@ async def subscribe(context, request):
             if price == orig_price['price']:
                 trial = orig_price.get('trial', 0)
         if trial is None:
-            raise HTTPPreconditionFailed(content={"reason": "No price and no trial"})
+            raise HTTPPreconditionFailed(
+                content={"reason": "No price and no trial"})
     else:
         raise HTTPPreconditionFailed(content={"reason": "No price"})
 
     path = "/".join(get_physical_path(context))
     db = task_vars.db.get()
 
+    if not can_activate_trial:
+        trial = 0
+
     subscription = await util.create_subscription(
-        customer=bhr.customer,
+        customer=customer,
         price=price,
         payment_method=pmid,
         path=path,
@@ -331,7 +366,6 @@ async def webhook_trailend(event):
 
 @configure.subscriber(for_=ICustomerSubscriptionDeleted)
 async def webhook_deleted(event):
-
     if event.data["object"] == "subscription":
         metadata = event.data.get("metadata", {})
         path = metadata.get("path", None)
