@@ -28,6 +28,7 @@ class Subscription(BaseModel):
     current_period_end: int
     current_period_start: int
     status: str
+    cancel_at_period_end: bool
     items: Any
     latest_invoice: Any
 

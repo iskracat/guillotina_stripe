@@ -154,6 +154,11 @@ class ISubscription(Interface):
     read_permission(trailing="guillotina.Owner")
     trailing = schema.Bool(title="Trailing", required=False, default=False)
 
+    write_permission(cancel_at_period_end="guillotina.Nobody")
+    read_permission(cancel_at_period_end="guillotina.Owner")
+    cancel_at_period_end = schema.Bool(
+        title="Cancel at period end", required=False, default=False)
+
     write_permission(trial_end="guillotina.Nobody")
     read_permission(trial_end="guillotina.Owner")
     trial_end = schema.Int(title="Trial end", required=False, default=False)

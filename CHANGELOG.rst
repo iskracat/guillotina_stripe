@@ -7,6 +7,7 @@ CHANGELOG
 - Not delete consumer after cancel subscription [rboixaderg]
 - Add cards behavior. Create a new behavior to save all customer cards in object. [rboixaderg]
 - Not cancelled all subscriptions from the same customer when created a new subscription or delete it [rboixaderg]
+- Add PATCH subscription endpoint, and avoid activate trial subscription if last subscription is cancelled
 
 
 1.0.0a11 (2021-11-25)

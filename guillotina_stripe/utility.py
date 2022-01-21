@@ -237,6 +237,17 @@ class StripePayUtility(object):
 
         return body
 
+    async def update_subscription(self, subscription, data):
+        url = f"/v1/subscriptions/{subscription}"
+
+        async with self.session.post(
+            self.api + url,
+            data=data,
+        ) as resp:
+            body = await resp.json()
+
+        return body
+
     async def create_subscription(self, customer: str, price: str, payment_method: str, path: str, db: str, trial: int, coupon: Optional[str] = None):
         url = f"/v1/subscriptions"
 
@@ -247,6 +258,7 @@ class StripePayUtility(object):
             "items[0][price]": price,
             "expand[]": "latest_invoice",
             "expand[]": "latest_invoice.payment_intent",
+            "default_payment_method": payment_method
         }
         if coupon is not None:
             subsdata["coupon"] = coupon
@@ -284,6 +296,16 @@ class StripePayUtility(object):
             result.append(Subscription(**subs))
 
         return result
+
+    async def get_subscription(self, subscription):
+        url = f"/v1/subscriptions/{subscription}"
+
+        async with self.session.get(
+            BASE_URL + url
+        ) as resp:
+            body = await resp.json()
+
+        return body
 
     async def get_event(self, payload, signature):
         if self.testing:

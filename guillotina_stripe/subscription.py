@@ -154,9 +154,27 @@ async def unsubscribe(context, request):
 
     if bhr.subscription is not None and bhr.customer is not None:
         await util.cancel_subscription(bhr.subscription)
-
-    bhr.subscription = None
     bhr.register()
+
+
+@configure.service(
+    method="PATCH",
+    name="@subscribe",
+    permission="guillotina.ModifyContent",
+    context=IMarkerSubscription,
+)
+async def update_subscription(context, request):
+    payload = await request.json()
+    util = get_utility(IStripePayUtility)
+    bhr = ISubscription(context)
+
+    if bhr.subscription is not None and bhr.customer is not None:
+        subscription = await util.update_subscription(bhr.subscription, payload)
+
+    bhr.cancel_at_period_end = subscription.get("cancel_at_period_end")
+    bhr.register()
+
+    return subscription
 
 
 @configure.service(
@@ -182,16 +200,21 @@ async def unsubscribe(context, request):
 async def subscribe(context, request):
     payload = await request.json()
     bhr = ISubscription(context)
+    util = get_utility(IStripePayUtility)
 
+    can_activate_trial = True
     if bhr.subscription is not None:
-        raise HTTPPreconditionFailed(
-            content={"reason": "Subscription already exist"})
+        current_subscription = await util.get_subscription(bhr.subscription)
+        if current_subscription['status'] == 'canceled' or current_subscription['status'] == 'ended':
+            can_activate_trial = False
+        else:
+            raise HTTPPreconditionFailed(
+                content={"reason": "Subscription already exist"})
 
     customer = payload.get('customer', bhr.customer)
     if customer is None:
         raise HTTPPreconditionFailed(content={"reason": "No customer"})
 
-    util = get_utility(IStripePayUtility)
     pmid = payload.get("pmid")
     price = payload.get("price")
     coupon = payload.get("coupon")
@@ -219,6 +242,9 @@ async def subscribe(context, request):
 
     path = "/".join(get_physical_path(context))
     db = task_vars.db.get()
+
+    if not can_activate_trial:
+        trial = 0
 
     subscription = await util.create_subscription(
         customer=customer,
